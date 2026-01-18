@@ -100,7 +100,14 @@ class Paper:
     text: str               # Testo estratto dal PDF
     charts: List[Chart]     # Lista dei grafici trovati
 
-    def extract_all(self, context=None, generate_context=True) -> Paper
+    def extract_all(
+        self,
+        context=None,           # Contesto opzionale
+        generate_context=True,  # Genera contesto dal paper
+        max_workers=1,          # 1=sequenziale, >1=parallelo
+        on_progress=None,       # Callback (completed, total, chart)
+    ) -> Paper
+
     def to_csv(self, output_dir: str) -> List[Path]
     def to_excel(self, path: str) -> None
     def to_json(self, path: str) -> None
@@ -111,6 +118,22 @@ class Paper:
     extracted_charts: List[Chart]  # Grafici estratti con successo
     total_points: int       # Punti totali
     total_series: int       # Serie totali
+```
+
+#### Estrazione parallela
+
+```python
+# Estrazione sequenziale (default)
+paper.extract_all()
+
+# Estrazione parallela con 4 worker
+paper.extract_all(max_workers=4)
+
+# Con callback di progresso
+def on_progress(completed, total, chart):
+    print(f"[{completed}/{total}] Page {chart.page}: {chart.type}")
+
+paper.extract_all(max_workers=4, on_progress=on_progress)
 ```
 
 ### Chart

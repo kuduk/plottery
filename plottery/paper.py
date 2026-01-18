@@ -5,8 +5,9 @@ containing charts that can be extracted and analyzed.
 """
 
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Iterator, List, Optional, Union
+from typing import Callable, Iterator, List, Optional, Union
 
 import pandas as pd
 
@@ -97,6 +98,8 @@ class Paper:
         self,
         context: Optional[str] = None,
         generate_context: bool = True,
+        max_workers: int = 1,
+        on_progress: Optional[Callable[[int, int, Chart], None]] = None,
     ) -> "Paper":
         """Extract data from all charts.
 
@@ -106,6 +109,10 @@ class Paper:
                      context will be generated from paper text.
             generate_context: Whether to generate context from paper
                               text for each chart (default True).
+            max_workers: Number of parallel workers for extraction.
+                         1 = sequential (default), >1 = parallel.
+            on_progress: Optional callback called after each chart extraction.
+                         Signature: (completed_count, total_count, chart) -> None
 
         Returns:
             Self, for method chaining
@@ -113,21 +120,68 @@ class Paper:
         Raises:
             RuntimeError: If LLM is not available
         """
-        for i, chart in enumerate(self.charts):
-            try:
-                if context:
-                    chart.extract(context=context)
-                elif generate_context and self.text:
-                    # Let the chart generate its own context from paper_text
-                    chart.extract()
-                else:
-                    chart.extract(context=f"Scientific chart from {self.path.name}")
-
-            except Exception as e:
-                # Continue with other charts even if one fails
-                chart.metadata["error"] = str(e)
+        if max_workers <= 1:
+            # Sequential extraction
+            for i, chart in enumerate(self.charts):
+                self._extract_single_chart(chart, context, generate_context)
+                if on_progress:
+                    on_progress(i + 1, len(self.charts), chart)
+        else:
+            # Parallel extraction
+            self._extract_parallel(context, generate_context, max_workers, on_progress)
 
         return self
+
+    def _extract_single_chart(
+        self,
+        chart: Chart,
+        context: Optional[str],
+        generate_context: bool,
+    ) -> None:
+        """Extract data from a single chart."""
+        try:
+            if context:
+                chart.extract(context=context)
+            elif generate_context and self.text:
+                chart.extract()
+            else:
+                chart.extract(context=f"Scientific chart from {self.path.name}")
+        except Exception as e:
+            chart.metadata["error"] = str(e)
+
+    def _extract_parallel(
+        self,
+        context: Optional[str],
+        generate_context: bool,
+        max_workers: int,
+        on_progress: Optional[Callable[[int, int, Chart], None]],
+    ) -> None:
+        """Extract data from all charts in parallel."""
+        total = len(self.charts)
+        completed = 0
+
+        def extract_task(chart: Chart) -> Chart:
+            self._extract_single_chart(chart, context, generate_context)
+            return chart
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_chart = {
+                executor.submit(extract_task, chart): chart
+                for chart in self.charts
+            }
+
+            # Process completed tasks
+            for future in as_completed(future_to_chart):
+                chart = future_to_chart[future]
+                completed += 1
+                try:
+                    future.result()  # Raise exception if any
+                except Exception as e:
+                    chart.metadata["error"] = str(e)
+
+                if on_progress:
+                    on_progress(completed, total, chart)
 
     def to_csv(self, output_dir: Union[str, Path]) -> List[Path]:
         """Export each chart to a separate CSV file.
