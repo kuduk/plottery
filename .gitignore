@@ -36,3 +36,6 @@ Thumbs.db
 
 #Output results
 output/
+
+# Data demos
+demo/data/
