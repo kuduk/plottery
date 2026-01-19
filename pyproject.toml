@@ -36,7 +36,7 @@ dependencies = [
 pdf = ["pymupdf>=1.23"]
 peaks = ["scipy>=1.11"]
 excel = ["openpyxl>=3.1"]
-dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "python-dotenv>=1.0"]
 all = ["plottery[pdf,peaks,excel,dev]"]
 
 [project.urls]

@@ -1,136 +1,236 @@
-# Plottery Demo
+# Plottery - Demo
 
-Questa cartella contiene esempi di utilizzo della libreria Plottery.
+Questa cartella contiene esempi pratici di utilizzo di Plottery.
 
-## Demo disponibili
+## File Demo
 
-### demo_llm_extraction.py (Raccomandato)
+| File | Descrizione | Complessità |
+|------|-------------|-------------|
+| `demo_simple.py` | Esempio minimo (~30 righe) | Basico |
+| `demo_auto_context.py` | Generazione automatica contesto | Intermedio |
+| `demo_full.py` | Demo completa con tutte le opzioni | Avanzato |
 
-Demo dell'approccio LLM-based per l'estrazione dati. Passa le immagini direttamente a Claude che legge i valori dal grafico.
+---
 
-**Esecuzione:**
+## `demo_simple.py` - Esempio Minimo
+
+L'utilizzo più semplice possibile di Plottery:
+
 ```bash
-cd /home/kuduk/plottery
-source venv/bin/activate
-python demo/demo_llm_extraction.py
+python demo/demo_simple.py
 ```
 
-**Cosa fa:**
-1. Estrae le immagini dei grafici dal PDF
-2. Filtra le immagini che non sono grafici
-3. Passa ogni grafico a Claude con contesto dal paper
-4. Claude legge direttamente i valori dagli assi
-5. Restituisce dati strutturati (serie, picchi, calibrazione)
-6. Salva in CSV
+**Cosa fa**:
+1. Carica un PDF
+2. Estrae tutti i grafici
+3. Stampa i risultati
+4. Esporta in CSV
 
-**Vantaggi:**
-- Più semplice: niente computer vision complessa
-- Più accurato: Claude capisce il contesto
-- Funziona con grafici di bassa qualità
-- Rileva automaticamente scale e unità
+**Codice chiave**:
+```python
+from plottery import Paper
 
-### demo_auto_context.py
+paper = Paper("paper.pdf")
+paper.extract_all()
+paper.to_csv("output/")
+```
 
-Demo del workflow completo con generazione automatica del contesto:
-1. Estrae il testo dal paper PDF
-2. Per ogni grafico, Claude legge il paper e genera contesto specifico
-3. Usa il contesto generato per estrarre i dati con maggiore accuratezza
+---
 
-**Esecuzione:**
+## `demo_auto_context.py` - Contesto Automatico
+
+Dimostra la generazione automatica del contesto dal testo del paper:
+
 ```bash
-cd /home/kuduk/plottery
-source venv/bin/activate
 python demo/demo_auto_context.py
 ```
 
-**Output aggiuntivo:**
-- `chart_X_context.txt` - Contesto generato per ogni grafico
+**Cosa fa**:
+1. Carica un PDF con `Paper()`
+2. Estrae il testo completo del paper
+3. Per ogni grafico, genera automaticamente un contesto
+4. Mostra il contesto generato per ogni grafico
+5. Esporta i risultati
 
-### demo_frosini2010.py
+**Uso consigliato**: Quando vuoi vedere come Plottery interpreta i grafici in base al contenuto del paper.
 
-Demo dell'approccio tradizionale con computer vision + VLM per classificazione.
+---
 
-**Esecuzione:**
+## `demo_full.py` - Demo Completa
+
+Demo avanzata con tutte le funzionalità e opzioni CLI:
+
 ```bash
-cd /home/kuduk/plottery
-source venv/bin/activate
-python demo/demo_frosini2010.py
+# Aiuto
+python demo/demo_full.py --help
+
+# Modalità normale
+python demo/demo_full.py
+
+# Con debug (salva immagini, metadati, contesto)
+python demo/demo_full.py --debug
+
+# Estrazione parallela con 4 worker
+python demo/demo_full.py --parallel 4
+
+# Entrambe le opzioni
+python demo/demo_full.py --debug --parallel 4
 ```
 
-**Cosa fa:**
-1. Estrae automaticamente i grafici dal PDF
-2. Classifica ogni grafico (line chart, bar chart, etc.)
-3. Rileva automaticamente la scala degli assi usando VLM (Claude API)
-4. Estrae i punti dati con segmentazione colore
-5. Rileva i picchi negli spettri
-6. Salva tutto in CSV nella cartella `output/`
+**Opzioni CLI**:
+- `--debug` / `-d`: Salva immagini, file JSON con metadati, e file txt con contesto
+- `--parallel N` / `-p N`: Usa N worker per estrazione parallela
 
-**Output:**
-- `chart_X_pageY.png` - Immagini dei grafici estratti
-- `chart_X_data.csv` - Dati estratti in formato CSV (approccio CV)
-- `chart_X_llm_data.csv` - Dati estratti in formato CSV (approccio LLM)
+**Cosa include**:
+1. **Demo 1**: Estrazione da PDF
+   - Progress callback
+   - Estrazione parallela opzionale
+   - Riepilogo risultati
+2. **Demo 2**: Estrazione da singola immagine
+   - Contesto manuale
+   - Accesso ai dati serie
+3. **Demo 3**: Configurazione
+   - Mostra opzioni disponibili
 
-## Struttura
+---
+
+## Struttura Output
+
+### Modalità normale
 
 ```
-demo/
-├── README.md
-├── demo_frosini2010.py     # Script demo principale
-├── data/
-│   ├── images/
-│   │   └── demo.png        # Immagine di test
-│   └── papers/
-│       └── frosini2010.pdf # Paper di esempio
-└── output/                 # Output generato
-    ├── chart_1_data.csv
-    ├── chart_2_data.csv
-    └── ...
+demo/output/demo_simple/
+├── chart_1_page2.csv
+├── chart_2_page3.csv
+└── paper_data.json
 ```
 
-## Risultati esempio
+### Modalità debug
 
-### Paper Frosini 2010 (spettri frequenza)
-- **Grafici estratti**: 7
-- **Punti dati totali**: ~500
-- **Picchi rilevati**: ~70
-
-Scale rilevate automaticamente:
-- Spettri di frequenza: X = 0-2000 Hz, Y = -180 a 0 dB
-- Curve di efficienza: X = 3-7.5 Nm, Y = 79-87%
-
-### Paper IEMDC (perdite motore)
-- **Grafici estratti**: 4
-- **Punti dati totali**: 64
-- **Tipi**: scatter, line, stacked_bar
-
-Esempio grafico a barre impilate:
 ```
-Ps (stator copper losses): Anal.=173.8W, IEC=187.4W
-Pr (rotor copper losses):  Anal.=120.5W, IEC=117.6W
-Pmech (mechanical losses): Anal.=21.5W,  IEC=28.5W
-PFe (iron losses):         Anal.=228.0W, IEC=206.1W
-PLL (additional losses):   Anal.=66.9W,  IEC=30.8W
+demo/output/demo_full/
+├── chart_1_page2.csv
+├── paper_data.json
+└── debug/
+    ├── chart_1_page2.png           # Immagine grafico
+    ├── chart_1_page2_debug.json    # Metadati completi
+    └── chart_1_page2_context.txt   # Contesto generato
 ```
 
-## Utilizzo base
+---
+
+## Dati di Test
+
+La cartella `data/` contiene:
+
+```
+data/
+├── images/
+│   └── demo.png                    # Immagine spettro esempio
+└── papers/
+    ├── frosini2010.pdf             # Paper di test principale
+    └── ...                         # Altri paper
+```
+
+---
+
+## Come Scegliere la Demo
+
+| Situazione | Demo consigliata |
+|------------|------------------|
+| Prima volta con Plottery | `demo_simple.py` |
+| Capire come funziona il contesto | `demo_auto_context.py` |
+| Testare tutte le funzionalità | `demo_full.py` |
+| Debug problemi di estrazione | `demo_full.py --debug` |
+| Velocizzare elaborazione | `demo_full.py --parallel 4` |
+
+---
+
+## Requisiti
+
+Prima di eseguire le demo:
+
+1. **API Key**: Assicurati che `ANTHROPIC_API_KEY` sia impostata in `.env` o come variabile d'ambiente
+
+2. **Dipendenze**: Installa le dipendenze
+   ```bash
+   pip install -e ".[all]"
+   ```
+
+3. **PDF di test**: Verifica che `data/papers/frosini2010.pdf` esista
+
+---
+
+## Output Atteso
+
+### `demo_simple.py`
+
+```
+Found 8 charts, extracted 1247 points
+  Page 2: line - 2 series, 156 pts
+  Page 3: bar - 3 series, 24 pts
+  ...
+
+Data exported to demo/output/simple/
+```
+
+### `demo_full.py --debug`
+
+```
+============================================================
+Demo 1: Extract charts from PDF
+============================================================
+
+Loading: frosini2010.pdf
+Text extracted: 45623 characters
+Charts found: 8
+
+Extracting data from all charts (sequential)...
+  [1/8] Chart page 2: spectrum OK
+  [2/8] Chart page 3: bar OK
+  ...
+
+Extraction time: 45.3s
+
+Chart 1 (page 2):
+  Type: spectrum
+  Series: 2
+  Points: 156
+  X range: (0.0, 2000.0)
+  [debug] Image: chart_1_page2.png
+  [debug] Info: chart_1_page2_debug.json
+
+Exporting...
+CSV files: 8
+JSON: paper_data.json
+Debug files: demo/output/demo_full/debug
+```
+
+---
+
+## Utilizzo Base (API)
 
 ```python
-import plottery
+from plottery import Paper, Chart
 
-# Estrazione semplice
-result = plottery.extract("chart.png")
+# === Da PDF ===
+paper = Paper("paper.pdf")
+paper.extract_all()
 
-# Con calibrazione manuale
-result = plottery.extract("spectrum.png", calibration={
-    "x_range": (0, 2000),   # Hz
-    "y_range": (-180, 0),   # dB
-})
+for chart in paper.charts:
+    print(f"Page {chart.page+1}: {chart.type}")
+    print(f"  Series: {chart.num_series}")
+    print(f"  Points: {chart.num_points}")
 
-# Accesso ai dati
-df = result.to_dataframe()
-result.to_csv("output.csv")
+paper.to_excel("output.xlsx")
 
-# Analisi picchi
-for peak in result.peaks:
-    print(f"{peak.x:.1f} Hz: {peak.y:.1f} dB")
+# === Da immagine singola ===
+chart = Chart.from_image("spectrum.png")
+chart.extract(context="Motor frequency spectrum")
+df = chart.to_dataframe()
+
+# === Configurazione ===
+from plottery import config
+config.sample_density = "high"  # più punti
+config.detect_peaks = False     # disabilita picchi
 ```

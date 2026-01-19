@@ -257,15 +257,18 @@ if chart.is_categorical:
 Vedi la cartella `demo/` per esempi di utilizzo:
 
 ```bash
-# Attiva virtual environment
-source venv/bin/activate
-
-# Demo semplice con nuova API
+# Esempio minimo (~30 righe)
 python demo/demo_simple.py
 
-# Demo con generazione automatica contesto
+# Contesto automatico dal paper
 python demo/demo_auto_context.py
+
+# Demo completa con tutte le opzioni
+python demo/demo_full.py --help
+python demo/demo_full.py --debug --parallel 4
 ```
+
+Per una guida completa, vedi [USERGUIDE.md](./USERGUIDE.md).
 
 ## Struttura File
 

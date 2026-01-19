@@ -12,20 +12,10 @@ Usage:
     python demo/demo_auto_context.py
 """
 
-import os
-import sys
 from pathlib import Path
+from dotenv import load_dotenv
 
-# Add parent to path for development
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Load API key from .env
-env_path = Path(__file__).parent.parent / ".env"
-if env_path.exists():
-    with open(env_path) as f:
-        for line in f:
-            if line.startswith("ANTHROPIC_API_KEY"):
-                os.environ["ANTHROPIC_API_KEY"] = line.split("=", 1)[1].strip()
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 from plottery import Paper, config
 
