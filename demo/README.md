@@ -9,6 +9,7 @@ Questa cartella contiene esempi pratici di utilizzo di Plottery.
 | `demo_simple.py` | Esempio minimo (~30 righe) | Basico |
 | `demo_auto_context.py` | Generazione automatica contesto | Intermedio |
 | `demo_full.py` | Demo completa con tutte le opzioni | Avanzato |
+| `demo_overlay.py` | Verifica visiva overlay dati estratti | Avanzato |
 
 ---
 
@@ -94,6 +95,34 @@ python demo/demo_full.py --debug --parallel 4
 
 ---
 
+## `demo_overlay.py` - Verifica Visiva
+
+Sovrappone i dati estratti all'immagine originale per verificare l'accuratezza:
+
+```bash
+python demo/demo_overlay.py
+```
+
+**Cosa fa**:
+1. Carica un'immagine di grafico
+2. Estrae i dati con Plottery
+3. Converte le coordinate dati → pixel
+4. Mostra immagine originale vs overlay
+5. Salva il risultato
+
+**Output**:
+- Finestra matplotlib con confronto side-by-side
+- `output/overlay/overlay_result.png`
+
+**Modalità interattiva** (se l'overlay non corrisponde):
+```python
+# Nel codice, cambia:
+fig = overlay_extraction(chart, interactive=True)
+# Poi clicca sui 4 angoli del plot
+```
+
+---
+
 ## Struttura Output
 
 ### Modalità normale
@@ -143,6 +172,7 @@ data/
 | Testare tutte le funzionalità | `demo_full.py` |
 | Debug problemi di estrazione | `demo_full.py --debug` |
 | Velocizzare elaborazione | `demo_full.py --parallel 4` |
+| Verificare accuratezza estrazione | `demo_overlay.py` |
 
 ---
 
